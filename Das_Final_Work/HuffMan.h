@@ -1,81 +1,135 @@
-#pragma once
-#include<iostream>
-#include <iomanip>//这个头文件是声明一些 “流操作符”的
-//比较常用的有:setw(int);//设置显示宽度，left//right//设置左右对齐。 setprecision(int);//设置浮点数的精确度。
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
 using namespace std;
-// 哈夫曼树的结点结构
-struct element
+const int INF = 65535;
+
+//哈夫曼树
+typedef struct Node {
+	int weight;
+	int parent;
+	int lchild;
+	int rchild;
+}*HuffmanTree;
+
+//哈夫曼编码
+typedef struct Code {
+	char data;//字符
+	int weight;//权重
+	string code;//编码
+}*HuffmanCode;
+
+//初始化参数
+void initTree(HuffmanTree& tree, HuffmanCode& code, map<char, int> m, int n)
 {
-    int weight;        // 权值域
-    int lchild, rchild, parent;  // 该结点的左、右、双亲结点在数组中的下标
-};
-// 选取权值最小的两个结点
-void selectMin(element a[], int n, int& s1, int& s2)
-{
-    for (int i = 0; i < n; i++)
-    {
-        if (a[i].parent == -1)// 初始化s1,s1的双亲为-1
-        {
-            s1 = i;
-            break;
-        }
-    }
-    for (int i = 0; i < n; i++)// s1为权值最小的下标
-    {
-        if (a[i].parent == -1 && a[s1].weight > a[i].weight)
-            s1 = i;
-    }
-    for (int j = 0; j < n; j++)
-    {
-        if (a[j].parent == -1 && j != s1)// 初始化s2,s2的双亲为-1
-        {
-            s2 = j;
-            break;
-        }
-    }
-    for (int j = 0; j < n; j++)// s2为另一个权值最小的结点
-    {
-        if (a[j].parent == -1 && a[s2].weight > a[j].weight && j != s1)
-            s2 = j;
-    }
+	//初始化权重、父子节点值
+	map<char, int>::iterator it;
+	it = m.begin();
+	for (int i = 1; i <= 2 * n - 1; i++)
+	{
+		if (i <= n)
+		{
+			tree[i].weight = it->second;
+			code[i].weight = it->second;
+			code[i].data = it->first;
+			it++;
+		}
+		else
+		{
+			tree[i].weight = 0;//
+		}
+		tree[i].parent = tree[i].lchild = tree[i].rchild = 0;//
+	}
 }
-// 哈夫曼算法
-// n个叶子结点的权值保存在数组w中
-void HuffmanTree(element huftree[], int w[], int n)
+
+//选择两个最小值
+void Select(HuffmanTree& tree, int& a, int& b, int n)
 {
-    for (int i = 0; i < 2 * n - 1; i++)    // 初始化，所有结点均没有双亲和孩子
-    {
-        huftree[i].parent = -1;
-        huftree[i].lchild = -1;
-        huftree[i].rchild = -1;
-    }
-    for (int i = 0; i < n; i++)    // 构造只有根节点的n棵二叉树,储存叶子节点的权值。
-    {
-        huftree[i].weight = w[i];
-    }
-    for (int k = n; k < 2 * n - 1; k++) // n-1次合并
-    {
-        int i1, i2;
-        selectMin(huftree, k, i1, i2); // 查找权值最小的俩个根节点，下标为i1,i2
-        // 将i1，i2合并，且i1和i2的双亲为k
-        huftree[i1].parent = k;
-        huftree[i2].parent = k;
-        huftree[k].lchild = i1;
-        huftree[k].rchild = i2;
-        huftree[k].weight = huftree[i1].weight + huftree[i2].weight;
-    }
+	int minWeight = INF;
+	//寻找最小值 权值最小并且无父节点
+	for (int i = 1; i <= n; i++)
+	{
+		if (tree[i].weight < minWeight && tree[i].parent == 0)
+		{
+			minWeight = tree[i].weight;
+			a = i;
+		}
+	}
+	minWeight = INF;
+	//寻找次小值
+	for (int i = 1; i <= n; i++)
+	{
+		if (tree[i].weight < minWeight && tree[i].parent == 0 && i != a)
+		{
+			minWeight = tree[i].weight;
+			b = i;
+		}
+	}
 }
-// 打印哈夫曼树
-void print(element hT[], int n)
+
+//构建哈夫曼树
+void createHuffmanTree(HuffmanTree& tree, int n)
 {
-    cout << "index weight parent lChild rChild" << endl;
-    cout << left;    // 左对齐输出
-    for (int i = 0; i < n; ++i)
-    {
-        cout << setw(5) << i << " ";
-        cout << setw(6) << hT[i].weight << " ";
-        cout << setw(6) << hT[i].parent << " ";
-        cout << setw(6) << hT[i].lchild << " ";
-        cout << setw(6) << hT[i].rchild << endl;
-    }
+	int a, b;
+	for (int i = n + 1; i <= 2 * n - 1; i++)//n*n
+	{
+		Select(tree, a, b, i - 1);//从i-1范围选择两个最小值
+		tree[a].parent = i;//该节点的双亲节点在数组中的下标
+		tree[b].parent = i;
+		tree[i].lchild = a;
+		tree[i].rchild = b;
+		tree[i].weight = tree[a].weight + tree[b].weight;
+	}
+}
+
+
+//哈夫曼编码
+void HuffCode(HuffmanTree& tree, HuffmanCode& code, int n)
+{
+	string s;
+	int j, k;
+	for (int i = 1; i <= n; i++)//n*logn
+	{
+		s = "";
+		j = i;
+		while (tree[j].parent != 0)//根节点的父节点为0,往上找根节点。
+		{
+			k = tree[j].parent;//父节点
+			if (j == tree[k].lchild)//左孩子为0 右孩子为1
+			{
+				s += "0";
+			}
+			else
+			{
+				s += "1";
+			}
+			j = k;//向父节点遍历
+		}
+		reverse(s.begin(), s.end());//逆序s
+		code[i].code = s;
+	}
+}
+
+//哈夫曼解码
+string HuffDeCode(HuffmanCode& code, string s, int n)
+{
+	string res = "";
+	string temp = "";
+	//方法一 将每个字符形成的字符串与code中保存的每个二进制编码进行对比
+	//方法二 可以根据根节点然后找其孩子节点 如果是0 找左孩子 如果是1找有孩子 直到其左右孩子为0为止
+	for (unsigned int i = 0; i < s.size(); i++)
+	{
+		temp += s[i];//每个字符都进行对比
+		for (int j = 1; j <= n; j++)//与结构体中的编码进行对比
+		{
+			if (temp == code[j].code)
+			{
+				res += code[j].data;
+				temp = "";
+				break;
+			}
+		}
+	}
+	return res;
 }

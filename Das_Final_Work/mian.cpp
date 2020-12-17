@@ -35,7 +35,7 @@ int main() {
 	{
 		fout1 << iter->first << "\t" << iter->second << endl;
 	}
-	cout << "I'm spend five hours.I'm so happy!" << endl;
+	cout << "统计字符成功！" << endl;
 
 	//SortedCharNum.txt
 	vector<pair<char, int>> tmp;

@@ -139,12 +139,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="mian.cpp" />
+    <ClInclude Include="HuffMan.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HuffMan.h" />
-    <ClInclude Include="HuffMan2.h" />
-    <ClInclude Include="HuffMan3.h" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
